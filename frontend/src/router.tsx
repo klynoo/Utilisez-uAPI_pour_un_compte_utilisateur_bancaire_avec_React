@@ -1,23 +1,34 @@
 import { createBrowserRouter, Outlet } from "react-router-dom";
-import App from "./App";
-import LoginUI from "./login/LoginUI";
-import Profil from "./Profil";
+import Home from "./pages/Home";
+import Header from "./layout/Header";
+import Login from "./pages/Login";
+import ProfilUI from "./pages/profil/ProfilUI";
+import AccountDetailsUI from "./AccountDetailsUI";
 
 export const router = createBrowserRouter([
   {
     element: (
       <>
+        <Header />
         <Outlet />
       </>
     ),
     children: [
       {
+        path: "",
+        element: <Home />,
+      },
+      {
         path: "login",
-        element: <LoginUI />,
+        element: <Login />,
       },
       {
         path: "profil",
-        element: <Profil />,
+        element: <ProfilUI />,
+      },
+      {
+        path: "account/:accountName",
+        element: <AccountDetailsUI />,
       },
     ],
   },

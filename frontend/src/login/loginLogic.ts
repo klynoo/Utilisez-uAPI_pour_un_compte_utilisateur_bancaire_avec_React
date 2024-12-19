@@ -1,20 +1,29 @@
 import { useDispatch } from "react-redux";
-import { login } from "../store"; // Action Redux
+import { login } from "../store";
 import { AppDispatch } from "../store";
 import { useNavigate } from "react-router-dom";
 
 export interface LoginCredentials {
   email: string;
   password: string;
+  rememberMe: boolean;
 }
 
-// Liste des utilisateurs autorisés
 const authorizedUsers = [
-  { email: "admin@example.com", password: "password123" },
-  { email: "user1@example.com", password: "mypassword" },
+  {
+    firstName: "Tony",
+    lastName: "Stark",
+    email: "tony@stark.com",
+    password: "password123",
+  },
+  {
+    firstName: "Steve",
+    lastName: "Rogers",
+    email: "steve@rogers.com",
+    password: "password456",
+  },
 ];
 
-// Logique de validation et gestion de connexion
 export const useLoginLogic = () => {
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
@@ -26,8 +35,17 @@ export const useLoginLogic = () => {
     );
 
     if (user) {
-      // Dispatch Redux et redirection
-      dispatch(login({ email: user.email, name: user.email.split("@")[0] }));
+      const userData = {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      };
+
+      const storage = credentials.rememberMe ? localStorage : sessionStorage;
+      storage.setItem("user", JSON.stringify(userData));
+
+      dispatch(login(userData));
+
       navigate("/profil");
       return null;
     } else {

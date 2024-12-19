@@ -1,12 +1,18 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; // Utilise localStorage
+import storage from "redux-persist/lib/storage";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+interface User {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 // --- ÉTAT INITIAL ---
 interface AuthState {
   isAuthenticated: boolean;
-  user: { email: string } | null; // Stocke uniquement l'email
+  user: User | null;
 }
 
 const initialState: AuthState = {
@@ -19,13 +25,24 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<{ email: string; name: string }>) => {
+    login: (
+      state,
+      action: PayloadAction<{
+        email: string;
+        firstName: string;
+        lastName: string;
+      }>
+    ) => {
       state.isAuthenticated = true;
-      state.user = action.payload;
+      state.user = {
+        email: action.payload.email,
+        firstName: action.payload.firstName,
+        lastName: action.payload.lastName,
+      };
     },
     logout: (state) => {
       state.isAuthenticated = false;
-      state.user = null; // Réinitialise l'utilisateur
+      state.user = null;
     },
   },
 });
@@ -35,8 +52,8 @@ export const { login, logout } = authSlice.actions;
 
 // --- PERSIST CONFIG ---
 const persistConfig = {
-  key: "auth", // Clé pour localStorage
-  storage, // Stockage localStorage
+  key: "auth",
+  storage,
 };
 
 const persistedReducer = persistReducer(persistConfig, authSlice.reducer);
@@ -64,7 +81,6 @@ const store = configureStore({
 
 export const persistor = persistStore(store);
 
-// Types pour TypeScript
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 

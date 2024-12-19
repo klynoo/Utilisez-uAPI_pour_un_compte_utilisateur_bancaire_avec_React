@@ -6,6 +6,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import store, { persistor } from "./store";
 import { router } from "./router";
 import reportWebVitals from "./reportWebVitals";
+import "./index.css";
 
 const rootElement = document.getElementById("root");
 
@@ -25,5 +26,4 @@ if (rootElement) {
   );
 }
 
-// Optionnel : Mesurer les performances de l'application
 reportWebVitals();
