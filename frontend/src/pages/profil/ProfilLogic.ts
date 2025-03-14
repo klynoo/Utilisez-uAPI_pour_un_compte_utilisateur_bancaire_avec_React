@@ -36,6 +36,7 @@ export const useProfilLogic = () => {
 
   const [accounts, setAccounts] = useState<TransactionMap>({});
 
+  // Données mockées
   const data: { users: DataUser[] } = {
     users: [
       {
@@ -204,6 +205,8 @@ export const useProfilLogic = () => {
       const userData = data.users.find((u: DataUser) => u.email === user.email);
       if (userData) {
         setAccounts(userData.transactions);
+      } else {
+        setAccounts({});
       }
     }
   }, [user]);

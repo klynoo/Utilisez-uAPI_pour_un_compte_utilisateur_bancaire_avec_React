@@ -1,7 +1,13 @@
-import { configureStore } from "@reduxjs/toolkit";
+import {
+  configureStore,
+  createSlice,
+  createAsyncThunk,
+  PayloadAction,
+} from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import axios from "axios";
+import { useDispatch } from "react-redux";
 
 interface User {
   firstName: string;
@@ -9,18 +15,51 @@ interface User {
   email: string;
 }
 
-// --- ÉTAT INITIAL ---
 interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
+  token: string | null;
+
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
+  token: null,
+
+  loading: false,
+  error: null,
 };
 
-// --- SLICE AUTH ---
+export const updateProfileThunk = createAsyncThunk<
+  User,
+  { token: string; userData: { firstName: string; lastName: string } },
+  { rejectValue: string }
+>("auth/updateProfile", async ({ token, userData }, { rejectWithValue }) => {
+  try {
+    const response = await axios.put(
+      "http://localhost:3001/api/v1/user/profile",
+      userData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Renvoie uniquement le corps de la réponse contenant les données utilisateur
+    const updatedUser = response.data.body;
+    return updatedUser;
+  } catch (error: any) {
+    const errMsg =
+      error.response?.data?.message || "Erreur de mise à jour du profil";
+    console.error("updateProfileThunk error:", errMsg);
+    return rejectWithValue(errMsg);
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -31,6 +70,7 @@ const authSlice = createSlice({
         email: string;
         firstName: string;
         lastName: string;
+        token: string;
       }>
     ) => {
       state.isAuthenticated = true;
@@ -39,18 +79,59 @@ const authSlice = createSlice({
         firstName: action.payload.firstName,
         lastName: action.payload.lastName,
       };
+      state.token = action.payload.token;
     },
+
     logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.token = null;
     },
+
+    updateProfile: (
+      state,
+      action: PayloadAction<{ firstName: string; lastName: string }>
+    ) => {
+      if (state.user) {
+        state.user.firstName = action.payload.firstName;
+        state.user.lastName = action.payload.lastName;
+      }
+    },
+  },
+
+  extraReducers: (builder) => {
+    builder
+      // Pending
+      .addCase(updateProfileThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      // Fulfilled
+      .addCase(updateProfileThunk.fulfilled, (state, action) => {
+        console.log(
+          "updateProfileThunk fulfilled with payload:",
+          action.payload
+        );
+        state.loading = false;
+        if (state.user) {
+          state.user = {
+            ...state.user,
+            ...action.payload,
+          };
+          console.log("Updated user in state:", state.user);
+        }
+      })
+
+      // Rejected
+      .addCase(updateProfileThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Erreur de mise à jour du profil";
+      });
   },
 });
 
-// Export des actions
-export const { login, logout } = authSlice.actions;
+export const { login, logout, updateProfile } = authSlice.actions;
 
-// --- PERSIST CONFIG ---
 const persistConfig = {
   key: "auth",
   storage,
@@ -58,7 +139,6 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, authSlice.reducer);
 
-// --- STORE CONFIG ---
 const store = configureStore({
   reducer: {
     auth: persistedReducer,
@@ -83,5 +163,7 @@ export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
 
 export default store;

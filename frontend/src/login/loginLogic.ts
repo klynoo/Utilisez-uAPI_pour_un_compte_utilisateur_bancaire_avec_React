@@ -1,7 +1,8 @@
 import { useDispatch } from "react-redux";
-import { login } from "../store";
 import { AppDispatch } from "../store";
 import { useNavigate } from "react-router-dom";
+import { loginUser, getUserProfile } from "../api/apiService";
+import { login } from "../store";
 
 export interface LoginCredentials {
   email: string;
@@ -9,47 +10,48 @@ export interface LoginCredentials {
   rememberMe: boolean;
 }
 
-const authorizedUsers = [
-  {
-    firstName: "Tony",
-    lastName: "Stark",
-    email: "tony@stark.com",
-    password: "password123",
-  },
-  {
-    firstName: "Steve",
-    lastName: "Rogers",
-    email: "steve@rogers.com",
-    password: "password456",
-  },
-];
-
 export const useLoginLogic = () => {
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleLogin = (credentials: LoginCredentials): string | null => {
-    const user = authorizedUsers.find(
-      (u) =>
-        u.email === credentials.email && u.password === credentials.password
-    );
+  const handleLogin = async (
+    credentials: LoginCredentials
+  ): Promise<string | null> => {
+    try {
+      const loginResponse = await loginUser({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-    if (user) {
+      const token = loginResponse.body?.token;
+      if (!token) {
+        return "Impossible de récupérer le token : vérifie la réponse du serveur.";
+      }
+
+      const profileResponse = await getUserProfile(token);
       const userData = {
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: profileResponse.body.firstName,
+        lastName: profileResponse.body.lastName,
+        email: profileResponse.body.email,
       };
 
-      const storage = credentials.rememberMe ? localStorage : sessionStorage;
-      storage.setItem("user", JSON.stringify(userData));
-
-      dispatch(login(userData));
+      dispatch(
+        login({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          token,
+        })
+      );
 
       navigate("/profil");
       return null;
-    } else {
-      return "Adresse email ou mot de passe incorrect.";
+    } catch (error: any) {
+      console.error("Erreur handleLogin :", error);
+      return (
+        error.response?.data?.message ||
+        "Adresse email ou mot de passe incorrect."
+      );
     }
   };
 

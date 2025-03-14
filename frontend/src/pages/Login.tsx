@@ -17,5 +17,5 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   background-color: #12002b;
-  height: 100vh;
+  height: 85vh;
 `;

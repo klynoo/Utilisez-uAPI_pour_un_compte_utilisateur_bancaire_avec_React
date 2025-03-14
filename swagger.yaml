@@ -1,13 +1,14 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Bank Argent API documentation
-  description: Contains all available API endpoints in this codebase
-  version: '1.0.0'
-  termsOfService: 'http://swagger.io/terms/'
+  description: Contains all available API endpoints
+  version: "1.0.0"
+  termsOfService: "http://swagger.io/terms/"
 host: localhost:3001
 basePath: /api/v1
 schemes:
   - http
+
 paths:
   /user/login:
     post:
@@ -18,21 +19,21 @@ paths:
       parameters:
         - in: body
           name: body
-          description: Login Payload
           required: true
           schema:
-            $ref: '#/definitions/Login'
+            $ref: "#/definitions/Login"
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: Login Successfully
           schema:
-            $ref: '#/definitions/LoginResponse'
-        '400':
+            $ref: "#/definitions/LoginResponse"
+        "400":
           description: Invalid Fields
-        '500':
+        "500":
           description: Internal Server Error
+
   /user/signup:
     post:
       tags:
@@ -42,21 +43,21 @@ paths:
       parameters:
         - in: body
           name: body
-          description: Signup Payload
           required: true
           schema:
-            $ref: '#/definitions/User'
+            $ref: "#/definitions/User"
       produces:
         - application/json
       responses:
-        '200':
+        "200":
           description: Signup Successfully
           schema:
-            $ref: '#/definitions/ApiResponse'
-        '400':
+            $ref: "#/definitions/ApiResponse"
+        "400":
           description: Invalid Fields
-        '500':
+        "500":
           description: Internal Server Error
+
   /user/profile:
     post:
       security:
@@ -68,18 +69,18 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          description: Attach Bearer JWT token
           required: true
+          type: string
       produces:
         - application/json
       responses:
-        '200':
-          description: User profile retrieved successully
+        "200":
+          description: User profile retrieved
           schema:
-            $ref: '#/definitions/ApiResponse'
-        '400':
+            $ref: "#/definitions/ApiResponse"
+        "400":
           description: Invalid Fields
-        '500':
+        "500":
           description: Internal Server Error
     put:
       security:
@@ -91,53 +92,524 @@ paths:
       parameters:
         - in: header
           name: Authorization
-          description: Attach Bearer JWT token
           required: true
+          type: string
         - in: body
           name: body
-          description: Update user profile attributes
           required: true
           schema:
-            $ref: '#/definitions/UserProfile'
+            $ref: "#/definitions/UserProfile"
       produces:
         - application/json
       responses:
-        '200':
-          description: User profile retrieved successully
+        "200":
+          description: User profile updated
           schema:
-            $ref: '#/definitions/ApiResponse'
-        '400':
+            $ref: "#/definitions/ApiResponse"
+        "400":
           description: Invalid Fields
-        '500':
+        "500":
           description: Internal Server Error
+  /transactions/monthly:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Visualiser toutes les transactions du mois groupées par compte
+      description: Récupère toutes les transactions pour le mois (par défaut, mois en cours), groupées par compte
+      parameters:
+        - name: month
+          in: query
+          description: Période au format YYYY-MM (ex: 2025-01). Si non fourni, utilise le mois en cours.
+          required: false
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Transactions du mois, groupées par compte
+          schema:
+            $ref: "#/definitions/TransactionsGroupedByAccountResponse"
+          examples:
+            application/json:
+              month: "2025-01"
+              accounts:
+                - accountId: "acc_123"
+                  transactions:
+                    - id: "tx_001"
+                      date: "2025-01-02T10:30:00Z"
+                      amount: 150.75
+                      currency: "EUR"
+                      type: "CREDIT"
+                      description: "Remboursement client"
+                    - id: "tx_002"
+                      date: "2025-01-05T09:15:00Z"
+                      amount: -50.00
+                      currency: "EUR"
+                      type: "DEBIT"
+                      description: "Achat en ligne"
+                - accountId: "acc_456"
+                  transactions:
+                    - id: "tx_003"
+                      date: "2025-01-05T11:00:00Z"
+                      amount: 300.00
+                      currency: "EUR"
+                      type: "CREDIT"
+                      description: "Salaire"
+        "400":
+          description: Paramètre de mois invalide
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Bad Request"
+              message: "Le mois doit être au format YYYY-MM"
+        "500":
+          description: Erreur interne
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Internal Server Error"
+              message: "Erreur inattendue"
+  /accounts/{accountId}/transactions:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Liste des transactions pour un compte
+      description: Récupère la liste des transactions d'un compte
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          type: string
+        - name: month
+          in: query
+          required: false
+          type: string
+        - name: page
+          in: query
+          required: false
+          type: integer
+          default: 1
+        - name: pageSize
+          in: query
+          required: false
+          type: integer
+          default: 10
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Liste des transactions
+          schema:
+            type: object
+            properties:
+              totalItems:
+                type: integer
+              currentPage:
+                type: integer
+              totalPages:
+                type: integer
+              transactions:
+                type: array
+                items:
+                  $ref: "#/definitions/Transaction"
+          examples:
+            application/json:
+              totalItems: 25
+              currentPage: 1
+              totalPages: 3
+              transactions:
+                - id: "tx_001"
+                  accountId: "acc_123"
+                  date: "2024-12-05T10:30:00Z"
+                  amount: 150.75
+                  currency: "EUR"
+                  type: "CREDIT"
+                  description: "Remboursement client"
+                - id: "tx_002"
+                  accountId: "acc_123"
+                  date: "2024-12-03T09:15:00Z"
+                  amount: -50.00
+                  currency: "EUR"
+                  type: "DEBIT"
+                  description: "Achat en ligne"
+        "400":
+          description: Paramètres invalides
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Bad Request"
+              message: "Paramètre 'month' invalide"
+        "404":
+          description: Compte introuvable
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Not Found"
+              message: "Compte inexistant"
+        "500":
+          description: Erreur interne
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Internal Server Error"
+              message: "Erreur inattendue"
+  /transactions/{transactionId}:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Détail d’une transaction
+      description: Récupère toutes les informations d’une transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Transaction trouvée
+          schema:
+            $ref: "#/definitions/Transaction"
+          examples:
+            application/json:
+              id: "tx_001"
+              accountId: "acc_123"
+              date: "2024-12-05T10:30:00Z"
+              amount: 150.75
+              currency: "EUR"
+              type: "CREDIT"
+              description: "Remboursement client"
+        "404":
+          description: Transaction introuvable
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Not Found"
+              message: "Transaction inexistante"
+        "500":
+          description: Erreur interne
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Internal Server Error"
+              message: "Erreur inattendue"
+
+  /transactions/{transactionId}/category:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Modification de la catégorie d’une transaction
+      description: Met à jour la catégorie d’une transaction existante
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/TransactionCategoryUpdate"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Catégorie mise à jour
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              transactionId:
+                type: string
+              category:
+                type: string
+          examples:
+            application/json:
+              message: "Catégorie mise à jour"
+              transactionId: "tx_001"
+              category: "Loisirs"
+        "400":
+          description: Données invalides
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Bad Request"
+              message: "Catégorie non valide"
+        "404":
+          description: Transaction introuvable
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Not Found"
+              message: "Transaction inexistante"
+        "500":
+          description: Erreur interne
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Internal Server Error"
+              message: "Erreur inattendue"
+
+    delete:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Suppression de la catégorie d’une transaction
+      description: Supprime la catégorie associée à une transaction existante
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "204":
+          description: Catégorie supprimée
+        "404":
+          description: Transaction introuvable
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Not Found"
+              message: "Transaction inexistante"
+        "500":
+          description: Erreur interne
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Internal Server Error"
+              message: "Erreur inattendue"
+
+  /transactions/{transactionId}/notes:
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Ajout ou modification de notes d’une transaction
+      description: Met à jour (ou crée) des notes sur une transaction existante
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/TransactionNotesUpdate"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Notes mises à jour
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              transactionId:
+                type: string
+              notes:
+                type: string
+          examples:
+            application/json:
+              message: "Notes mises à jour"
+              transactionId: "tx_001"
+              notes: "Notes de suivi de la transaction"
+        "400":
+          description: Données invalides
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Bad Request"
+              message: "Format des notes invalide"
+        "404":
+          description: Transaction introuvable
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Not Found"
+              message: "Transaction inexistante"
+        "500":
+          description: Erreur interne
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Internal Server Error"
+              message: "Erreur inattendue"
+
+    delete:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions
+      summary: Suppression des notes d’une transaction
+      description: Supprime les notes associées à une transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "204":
+          description: Notes supprimées
+        "404":
+          description: Transaction introuvable
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Not Found"
+              message: "Transaction inexistante"
+        "500":
+          description: Erreur interne
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          examples:
+            application/json:
+              error: "Internal Server Error"
+              message: "Erreur inattendue"
+
 securityDefinitions:
   Bearer:
     type: apiKey
     name: Authorization
     in: header
+
 definitions:
   User:
     properties:
       email:
         type: string
-        description: user email
       password:
         type: string
-        description: user password
       firstName:
         type: string
-        description: user first name
       lastName:
         type: string
-        description: user last name
+
   Login:
     properties:
       email:
         type: string
-        description: user email
       password:
         type: string
-        description: user password
+
   ApiResponse:
     type: object
     properties:
@@ -152,15 +624,74 @@ definitions:
             type: string
           email:
             type: string
+
   LoginResponse:
     type: object
     properties:
       token:
         type: string
+
   UserProfile:
     type: object
     properties:
       firstName:
         type: string
       lastName:
+        type: string
+
+  Transaction:
+    type: object
+    properties:
+      id:
+        type: string
+      accountId:
+        type: string
+      date:
+        type: string
+        format: date-time
+      amount:
+        type: number
+        format: float
+      currency:
+        type: string
+      type:
+        type: string
+      description:
+        type: string
+
+  TransactionCreate:
+    type: object
+    required:
+      - accountId
+      - amount
+      - currency
+      - type
+    properties:
+      accountId:
+        type: string
+      date:
+        type: string
+        format: date-time
+      amount:
+        type: number
+        format: float
+      currency:
+        type: string
+      type:
+        type: string
+      description:
+        type: string
+
+  TransactionCategoryUpdate:
+    type: object
+    required:
+      - category
+    properties:
+      category:
+        type: string
+
+  TransactionNotesUpdate:
+    type: object
+    properties:
+      notes:
         type: string

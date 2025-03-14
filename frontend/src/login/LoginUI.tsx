@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useLoginLogic } from "./loginLogic"; // Assurez-vous que ce fichier existe dans le même dossier
+import { useLoginLogic } from "./loginLogic";
 
 const LoginUI: React.FC = () => {
   const { handleLogin } = useLoginLogic();
@@ -12,11 +12,11 @@ const LoginUI: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errorMessage = handleLogin({ email, password, rememberMe });
-    if (errorMessage) {
-      setError(errorMessage);
-    } else {
-      setError(null);
-    }
+    // if (errorMessage) {
+    //   // setError(errorMessage);
+    // } else {
+    //   setError(null);
+    // }
   };
 
   return (

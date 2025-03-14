@@ -4,7 +4,7 @@ import { RootState, logout } from "../store";
 import styled from "styled-components";
 import LogoImg from "../assets/argentBankLogo.png";
 import CustomButton from "../button/CustomButton";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Header: React.FC = () => {
   const { isAuthenticated, user } = useSelector(
@@ -24,7 +24,7 @@ const Header: React.FC = () => {
 
   return (
     <Container>
-      <LogoWrapper>
+      <LogoWrapper to="/">
         <ImgLogo src={LogoImg} alt="Argent Bank Logo" />
       </LogoWrapper>
       {isAuthenticated ? (
@@ -50,7 +50,7 @@ const Container = styled.div`
   padding: 5px 20px;
 `;
 
-const LogoWrapper = styled.div`
+const LogoWrapper = styled(Link)`
   display: flex;
   align-items: center;
   height: 52px;

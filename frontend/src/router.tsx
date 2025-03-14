@@ -4,6 +4,7 @@ import Header from "./layout/Header";
 import Login from "./pages/Login";
 import ProfilUI from "./pages/profil/ProfilUI";
 import AccountDetailsUI from "./AccountDetailsUI";
+import Footer from "./layout/Footer";
 
 export const router = createBrowserRouter([
   {
@@ -11,6 +12,7 @@ export const router = createBrowserRouter([
       <>
         <Header />
         <Outlet />
+        <Footer />
       </>
     ),
     children: [
