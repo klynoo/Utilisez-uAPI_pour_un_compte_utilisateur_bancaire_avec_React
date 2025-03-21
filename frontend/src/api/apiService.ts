@@ -7,7 +7,6 @@ export const loginUser = async (credentials: {
   password: string;
 }) => {
   const response = await axios.post(`${API_URL}/user/login`, credentials);
-  console.log("loginUser response:", response.data);
   return response.data;
 };
 
@@ -21,7 +20,6 @@ export const getUserProfile = async (token: string) => {
       },
     }
   );
-  console.log("getUserProfile response:", response.data);
   return response.data;
 };
 
@@ -31,6 +29,5 @@ export const updateUserProfile = async (token: string, userData: any) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  console.log("updateUserProfile response:", response.data);
   return response.data;
 };

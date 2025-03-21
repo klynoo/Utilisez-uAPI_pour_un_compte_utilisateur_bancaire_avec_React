@@ -1,16 +1,15 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, logout } from "../store";
+import { AppDispatch, RootState, logout } from "../store";
 import styled from "styled-components";
 import LogoImg from "../assets/argentBankLogo.png";
-import CustomButton from "../button/CustomButton";
 import { useNavigate, Link } from "react-router-dom";
 
 const Header: React.FC = () => {
   const { isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -28,13 +27,16 @@ const Header: React.FC = () => {
         <ImgLogo src={LogoImg} alt="Argent Bank Logo" />
       </LogoWrapper>
       {isAuthenticated ? (
-        <div>
-          <CustomButton onClick={handleLogout}>Sign Out</CustomButton>
-        </div>
+        <ContainerButton>
+          <IUser className="fa fa-user-circle" />
+          <TextUser>{user?.firstName}</TextUser>
+          <IUser className="fa fa-sign-out" />
+          <StyledButton onClick={handleLogout}>Sign Out</StyledButton>
+        </ContainerButton>
       ) : (
         <ContainerButton>
           <IUser className="fa fa-user-circle" />
-          <CustomButton onClick={handleSignIn}>Sign In</CustomButton>
+          <StyledButton onClick={handleSignIn}>Sign In</StyledButton>
         </ContainerButton>
       )}
     </Container>
@@ -69,4 +71,30 @@ const ContainerButton = styled.div`
 const IUser = styled.i`
   margin-right: -5px;
   font-size: 16px;
+`;
+
+const TextUser = styled.span`
+  font-weight: bold;
+  color: #2c3e50;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+    text-decoration-color: black;
+  }
+`;
+
+const StyledButton = styled.div`
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  color: #2c3e50;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+    text-decoration-color: black;
+  }
 `;

@@ -9,19 +9,19 @@ const LoginUI: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errorMessage = handleLogin({ email, password, rememberMe });
-    // if (errorMessage) {
-    //   // setError(errorMessage);
-    // } else {
-    //   setError(null);
-    // }
+    const errorMessage = await handleLogin({ email, password, rememberMe });
+    if (errorMessage) {
+      setError(errorMessage);
+    } else {
+      setError(null);
+    }
   };
 
   return (
     <LoginForm onSubmit={handleSubmit}>
-      <IUser className="fa fa-user-circle" />
+      <IUser />
       <Title>Sign in</Title>
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <InputGroup>
